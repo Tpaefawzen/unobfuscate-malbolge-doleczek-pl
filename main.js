@@ -69,7 +69,7 @@ function flow() {
     if ( $(".tab-content .active .raport").length ) {
 	raport($(".tab-content .active").attr("rel"));
     }
-}
+} // @function flow
 
 /**
  * @function newProc
@@ -112,7 +112,10 @@ function loadMalbolgeFile(name) {
 /**
  * @function takeNextStep
  * @description
- * Called every 100ms while a program is running.
+ * For generating a program who outputs a given string.
+ * Called back itself every 100ms while a program is running.
+ * @caller id="textToCode"
+ * @dependency @global gen
  */
 function takeNextStep() {
     if ( gen.isDone() ) {
@@ -129,16 +132,24 @@ function takeNextStep() {
     }
     
     if ( ! $("#gen").length ) {
+	// Append <div id="gen">...</div> to body when not there.
 	$("body").append([
 	    '<div id="gen" style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 1000; background: rgba(100,100,100,0.5)">',
+		// WHAT???
 		'<div style="position: absolute; width: 800px; height: 320px; top: 0; bottom: 0; left: 0; right: 0; margin: auto; background: rgba(255,255,255,0.8); border: solid 1px #ccc; text-align: center">',
+		    //
+		    // Describes state.
 		    '<div id="genState" style="unicode-bidi: embed; font-family: monospace; white-space: pre; font-size: 16px; line-height: 22px; height: 180px; margin: 40px 60px; overflow-y: hidden; overflow-x: auto; text-align: center; font-weight: bold">...</div>',
-			'<div id="genPercent" style="float: left; font-size 24px; line-height: 36px; font-weight: bold; color: #aaa; margin: 0 0 0 50px"></div>',
-			'<button id="genCancel" class="btn btn-primary pull-right" style="margin: 0 40px">',
-			    '<span class="glyphicon glyphicon-cancel"></span>',
-			    '<span lang="pl">Anulujm</span>',
-			    '<span lang="en">Cancel</span>',
-			"</button>",
+		    //
+		    // How many percents are done?
+		    '<div id="genPercent" style="float: left; font-size 24px; line-height: 36px; font-weight: bold; color: #aaa; margin: 0 0 0 50px"></div>',
+		    //
+		    // Cancel button.
+		    '<button id="genCancel" class="btn btn-primary pull-right" style="margin: 0 40px">',
+			'<span class="glyphicon glyphicon-cancel"></span>',
+			'<span lang="pl">Anulujm</span>',
+			'<span lang="en">Cancel</span>',
+		    "</button>",
 		"</div>",
 	    "</div>"
 	].join(""));
@@ -149,20 +160,24 @@ function takeNextStep() {
 	});
     }
 
+    // Visualize progress.
     gen.spinner++;
-    $("#genState").html(
-	    gen.str()
-	    	.substr(0, gen.getN())
-	    	.replace(/&/g, "&amp;")
-	    	.replace(/</g, "&lt;")
-	    	.replace(/>/g, "&gt;")
-	    + ["-", "\\", "|", "/"][gen.spinner % 4]
+    const clock_like = ["-", "\\", "|", "/"][gen.spinner % 4];
+
+    const escaped_string = (
+	gen.str()
+	    .substr(0, gen.getN())
+	    .replace(/&/g, "&amp;")
+	    .replace(/</g, "&lt;")
+	    .replace(/>/g, "&gt;")
     );
 
+    $("#genState").html(escaped_string + clock_like);
     $("#genPercent").html(gen.percent() + " %");
+
     gen.nextStep();
     setTimeout(takeNextStep, 100);
-}
+} // @function takeNextStep
 
 /**
  * @function newProg
@@ -174,7 +189,7 @@ function takeNextStep() {
 function newProg(t, e) {
     /**
      * @const n {integer} process id.
-     * @const a {string} HTML to be inserted.
+     * @const a {string} HTML to be inserted. Dropdown menu.
      */
     var n = newProc(),
 	a = [
@@ -271,8 +286,9 @@ function newProg(t, e) {
     $("#langs .selected").click();
 
     $(".active .code").unbind("keyup").keyup(function (t) {
-	if (8 == t.which) {
-	    var e = this.rows;
+	const is_BS = t.which === 8;
+	if ( is_BS ) {
+	    var initial_rows = this.rows;
 	}
 
 	this.rows = this.scrollHeight / parseInt($(".active .code").css("line-height"))
@@ -284,8 +300,9 @@ function newProg(t, e) {
 	    this.rows++;
 	}
 	
-	if (e != this.rows) {
+	if (initial_rows != this.rows) {
 	    for (var n = [], a = 1; a <= this.rows; a++) {
+		// XXX: what does 1e4 mean?
 		n.push(a % 1e4);
 	    }
 	    $(".active .lines").html(n.join("\n"))
@@ -330,7 +347,9 @@ function newProg(t, e) {
     $(".progClose").unbind("click").click(function (t) {
 	t.preventDefault(), t.stopPropagation();
 	var e = $(".nav .active .dropdown-toggle").attr("proc");
+
 	delete PROC[e], PROC[e] = null;
+
 	var n = $(".nav .active");
 	n.next().find("a").eq(0).click();
 	$(".tab-content>div").eq(n.index()).remove();
@@ -338,18 +357,19 @@ function newProg(t, e) {
     });
 
     $(".progEcho, #textToCode").unbind("click").click(function () {
-	var t;
+	var msg;
 	switch (LANG) {
 	case "pl":
-	    t = "Wpisz tekst który ma być zamieniony na kod";
+	    msg = "Wpisz tekst który ma być zamieniony na kod";
 	    break;
 	default:
-	    t = "Write what you want to translate into code"
+	    msg = "Write what you want to translate into code"
 	}
 
-	var e = prompt(t, "Hello World!\n");
-	if ( e ) {
-	    gen.translate(e);
+	const default_str = "Hello World!\n";
+	var str = prompt(msg, default_str);
+	if ( str ) {
+	    gen.translate(str);
 	    gen.spinner = 0;
 	    takeNextStep();
 	}
@@ -375,17 +395,18 @@ function newProg(t, e) {
 			    '<span lang="en">Pause</span>',
 			"</button>",
 
-		'<button class="progRestart btn btn-primary pull-right" proc="' + t + '" title="Ctrl + R">',
-		'<span class="glyphicon glyphicon-repeat"></span>',
-		'<span lang="pl">Uruchom ponownie</span>',
-		'<span lang="en">Run again</span>',
-		"</button>",
-		'<button class="progMore btn btn-default pull-right" proc="' + t + '" title="Ctrl + D">',
-		'<span class="glyphicon glyphicon-cog"></span>',
-		'<span lang="pl">Zaawansowane</span>',
-		'<span lang="en">Advanced</span>',
-		"</button>",
-		"</div>",
+			'<button class="progRestart btn btn-primary pull-right" proc="' + t + '" title="Ctrl + R">',
+			    '<span class="glyphicon glyphicon-repeat"></span>',
+			    '<span lang="pl">Uruchom ponownie</span>',
+			    '<span lang="en">Run again</span>',
+			"</button>",
+
+			'<button class="progMore btn btn-default pull-right" proc="' + t + '" title="Ctrl + D">',
+			    '<span class="glyphicon glyphicon-cog"></span>',
+			    '<span lang="pl">Zaawansowane</span>',
+			    '<span lang="en">Advanced</span>',
+			"</button>",
+		    "</div>",
 		"</div>"
 	    ].join("\n"));
 
@@ -433,7 +454,9 @@ function newProg(t, e) {
 	$("#term" + t).parent().slideDown(function () {
 	    $("#term" + t).focus().unbind("keydown").keydown(function (e) {
 		PROC[t].input(e), PROC[t].run()
-	    }), PROC[t].stdout = $("#term" + t)[0], PROC[t].code = $("#code" + t).val();
+	    });
+	    PROC[t].stdout = $("#term" + t)[0];
+	    PROC[t].code = $("#code" + t).val();
 	    var e = PROC[t].reset();
 	    if ("OK" != e.status) {
 		var n = "";
@@ -526,7 +549,26 @@ function mkList(t) {
  * @class MALBOLGE
  */
 function MALBOLGE() {
+
+    const MALBOLGE_STATES = {
+	"HALT": 0, 
+	xxx: 1,
+	"INPUT": 2,
+	XXX: 3
+    };
+
+// @public @params
+
+    /**
+     * @param mem {list{unsigned}}
+     */
     this.mem = [];
+
+
+    /**
+     * @param code {string}
+     * @writable
+     */
     this.code = "";
 
     this.a = 0;
@@ -538,7 +580,7 @@ function MALBOLGE() {
      * @description
      * 0: stop
      */
-    this.state = 0;
+    this.state = MALBOLGE_STATES.HALT;
 
     this.stdout = null;
     this.end = !1;
@@ -547,86 +589,182 @@ function MALBOLGE() {
     this.pause = !1;
     this.tc = 0;
 
+// @public @methods
+    
+    /**
+     * @method reset
+     * @description
+     * Try to compile a program given at @param code.
+     *
+     * @returns {object}
+     */
     this.reset = function () {
 	this.mem = [];
 	this.a = 0;
 	this.c = 0;
 	this.d = 0;
-	this.state = 0;
+	this.state = MALBOLGE_STATES.HALT;
 	this.pause = !1;
 	this.end = !1;
 	this.tc = 0;
 
-	for (var t = 0, e = 0; t < this.code.length; t++)
-	    if (!(this.code.charCodeAt(t) < 33)) {
-		if (this.mem[e] = this.code.charCodeAt(t), $.inArray((this.mem[e] + e) % 94, [4, 5, 23, 39, 40, 62, 68, 81]) < 0) return {
-		    status: "NOK",
-		    type: 0,
-		    pos: t,
-		    val: this.mem[e] + e
-		};
-		e++
-	    } if (2 > e) return {
-	    status: "NOK",
-	    type: 1
+	const error_reason = {
+	    "NON_COMMAND_CHAR": 0,
+	    "TOO_SHORT": 1,
 	};
-	for (; maxT >= e; e++) this.mem[e] = this.crz(this.mem[e - 2], this.mem[e - 1]);
+
+	// @iterator t
+	// @iterator e Length of actual program.
+	for (var t = 0, e = 0; t < this.code.length; t++){
+	    const is_ctrl_char = this.code.charCodeAt(t) < 33;
+	    if ( ! is_ctrl_char ) {
+		// Let's put to memory once.
+		this.mem[e] = this.code.charCodeAt(t);
+
+		const valid_command_char_codes = [ 4, 5, 23, 39, 40, 62, 68, 81 ];
+		const is_valid_command = $.inArray((this.mem[e] + e) % 94, valid_command_char_codes) > 0;
+		if ( ! is_valid_command ) {
+		    return {
+			status: "NOK",
+			type: error_reason.NON_COMMAND_CHAR,
+			pos: t,
+			val: this.mem[e] + e
+		    };
+		}
+
+		e++
+	    }
+	}
+
+	const length_without_bugs = 2;
+	if (e < length_without_bugs) {
+	    return {
+		status: "NOK",
+		type: error_reason.TOO_SHORT
+	    };
+	}
+
+	// Initialize rest cells
+	for (; maxT >= e; e++) {
+	    this.mem[e] = this.crz(this.mem[e - 2], this.mem[e - 1]);
+	}
+
+	// finally
 	return {
 	    status: "OK"
 	}
     };
 
+    /**
+     * @method crz
+     * @param t, e {unsigned}
+     * @description
+     * Malbolge crazy operation.
+     */
     this.crz = function (t, e) {
-	for (var n = 0, a = 1, i = 0; 10 > i; i++) n += [1, 0, 0, 1, 0, 2, 2, 2, 1][t % 3 * 3 + e % 3] * a, t = ~~(t / 3), e = ~~(e / 3), a *= 3;
-	return n
+	// @result n
+	// @var a Weight.
+	// @iterator i
+	var result = 0;
+	var weight = 1;
+	for (let i = 0; 10 > i; i++) {
+	    const crazy_table = [
+		1, 0, 0,
+		1, 0, 2,
+		2, 2, 1
+	    ];
+	    const row = t % 3;
+	    const col = e % e;
+
+	    result += crazy_table[row * 3 + col] * weight;
+
+	    // ~~(...) is Math.floor(...).
+	    t = ~~(t / 3);
+	    e = ~~(e / 3);
+
+	    weight *= 3;
+	}
+
+	return result;
     };
 
+    /**
+     * @method run
+     */
     this.run = function () {
-	if (!(this.state > 1 || this.pause || this.end)) {
-	    this.state = 3;
-	    for (var t = 1e3; t-- && !this.end;) switch (this.tc++, this.c %= maxT + 1, this.d %= maxT + 1, (this.mem[this.c] + this.c) % 94) {
+	if ( this.state > 1 || this.pause || this.end ) {
+	    return;
+	}
+
+	this.state = 3;
+
+	for (var t = 1e3; t-- && !this.end;) {
+	    this.tc++;
+	    this.c %= maxT + 1;
+	    this.d %= maxT + 1;
+
+	    const current_command = ( this.mem[this.c] + this.c ) % 94;
+	    switch ( current_command ) {
 	    case 4:
+		// JUMP
 		this.c = this.mem[this.d], this.encrypt(this.c), this.c++, this.d++;
 		break;
 	    case 5:
+		// OUTPUT
 		this.stdout.value += String.fromCharCode(this.a % 256), this.stdout.scrollTop = 1e7, this.encrypt(this.c), this.c++, this.d++;
 		break;
 	    case 23:
+		// INPUT; @method input shall be used later
 		this.state = 2;
 		break;
 	    case 39:
+		// ROT_R
 		var e = this.mem[this.d];
 		e = e % 3 * 19683 + ~~(e / 3), this.mem[this.d] = e, this.a = e, this.encrypt(this.c), this.c++, this.d++;
 		break;
 	    case 40:
+		// LOAD
 		this.d = this.mem[this.d], this.encrypt(this.c), this.c++, this.d++;
 		break;
 	    case 62:
+		// CRAZY_OP
 		var e = this.crz(this.mem[this.d], this.a);
 		this.mem[this.d] = e, this.a = e, this.encrypt(this.c), this.c++, this.d++;
 		break;
 	    case 68:
+		// NOP
 		this.encrypt(this.c), this.c++, this.d++;
 		break;
 	    case 81:
+		// HALT
 		this.encrypt(this.c), this.state = 0, this.end = !0, this.onend && this.onend(this.endmsg);
 		break;
 	    default:
+		// XXX: The original source is missing when the current command was a control character.
 		this.encrypt(this.c), this.c++, this.d++
 	    }
-	    3 == this.state && (this.state = 1)
 	}
+
+	3 == this.state && (this.state = 1)
     };
 
+    /***
+     * @method input
+     * @param t {HTMLElement}
+     */
     this.input = function (t) {
-	if (t.ctrlKey || (t.preventDefault(), t.stopPropagation()), 2 == this.state) {
+	t.ctrlKey || (t.preventDefault(), t.stopPropagation());
+	if ( 2 == this.state ) {
 	    var e = t.which;
 	    9 == e || e > 15 && 20 > e || 91 == e || (13 == e && (e = 10), e = 255 & t.key.charCodeAt(0), 122 == e && t.ctrlKey && (e = 0), (8 == t.which || 13 == t.which || 27 == t.which || 35 == t.which || 36 == t.which || 45 == t.which || 46 == t.which) && (e = t.which), this.a = e, this.encrypt(this.c), this.c++, this.d++, this.state = 1)
 	}
     };
 
     this.encrypt = function (t) {
-	t = (t + 1 + maxT) % (maxT + 1), this.mem[t] = [57, 109, 60, 46, 84, 86, 97, 99, 96, 117, 89, 42, 77, 75, 39, 88, 126, 120, 68, 108, 125, 82, 69, 111, 107, 78, 58, 35, 63, 71, 34, 105, 64, 53, 122, 93, 38, 103, 113, 116, 121, 102, 114, 36, 40, 119, 101, 52, 123, 87, 80, 41, 72, 45, 90, 110, 44, 91, 37, 92, 51, 100, 76, 43, 81, 59, 62, 85, 33, 112, 74, 83, 55, 50, 70, 104, 79, 65, 49, 67, 66, 54, 118, 94, 61, 73, 95, 48, 47, 56, 124, 106, 115, 98][this.mem[t] % 94]
+	t = (t + 1 + maxT) % (maxT + 1);
+	const xlat2 = [57, 109, 60, 46, 84, 86, 97, 99, 96, 117, 89, 42, 77, 75, 39, 88, 126, 120, 68, 108, 125, 82, 69, 111, 107, 78, 58, 35, 63, 71, 34, 105, 64, 53, 122, 93, 38, 103, 113, 116, 121, 102, 114, 36, 40, 119, 101, 52, 123, 87, 80, 41, 72, 45, 90, 110, 44, 91, 37, 92, 51, 100, 76, 43, 81, 59, 62, 85, 33, 112, 74, 83, 55, 50, 70, 104, 79, 65, 49, 67, 66, 54, 118, 94, 61, 73, 95, 48, 47, 56, 124, 106, 115, 98];
+
+	this.mem[t] = xlat2[this.mem[t] % 94]
     };
 
     this.stop = function () {
@@ -646,8 +784,14 @@ function c(t, e) {
 
 /**
  * @class mb
+ * @param t {string} If given, a program to 
  */
 function mb(t) {
+    // @private @methods
+
+    /**
+     * @description
+     */
     function e() {
 	for (var t, e = !0, n = 0; e;) t = (p[n] || 0) + 1, e = t > 2, p[n++] = t % 3
     }
@@ -665,10 +809,40 @@ function mb(t) {
 	for (var n = 0, a = 1, i = 0; 10 > i; i++) n += [1, 0, 0, 1, 0, 2, 2, 2, 1][t % 3 * 3 + e % 3] * a, a *= 3, t = ~~(t / 3), e = ~~(e / 3);
 	return n
     }
-    var s, o, r, l, c, p, h, d, g, u = !1,
+
+    // @private @props
+
+    var s,
+
+	o, r, l, c, p, h, d, g,
+
+	/**
+	 * @var u {bool}
+	 * @description
+	 * Is it running?
+	 */
+	u = !1,
+
+	/**
+	 * @var  v {bool}
+	 * @description
+	 */
 	v = !1,
+
+	/**
+	 * @var m {bool}
+	 * @description
+	 * Is the program done?
+	 */
 	m = !1,
 	f = "";
+
+    // @public @methods
+
+    /**
+     * @method nextStep
+     * @description
+     */
     this.nextStep = function () {
 	if (u && !v) {
 	    if (v = !0, s >= f.length) return u = !1, v = !1, m = !0, r.length || r.push(n(68, r.length)), void r.push(n(81, r.length));
@@ -705,34 +879,45 @@ function mb(t) {
 	    l = a(n(39, r.length)), r.push(n(39, r.length)), v = !1
 	}
     };
+
     this.translate = function (t) {
 	u || (u = !0, m = !1, f = t, r = [], s = 0, l = 0, c = 0, p = [])
     };
+
     this.isRunning = function () {
 	return u
     };
+
     this.isDone = function () {
 	return m
     };
+
+    /**
+     * @returns {string}
+     */
     this.code = function () {
 	for (var t = [], e = 0; e < r.length; e++) t.push(String.fromCharCode(r[e]));
 	return t.join("")
     };
+
     this.getN = function () {
 	return s
     };
+
     this.str = function () {
 	return f
     };
+
     this.percent = function () {
 	return Math.round(1e3 * s / f.length) / 10
     };
+
     this.cancel = function () {
 	u = !1, m = !1
     };
 
     t && this.translate(t)
-} // function mb
+} // @class mb
 
 var PROC = [],
     LANG = "en",
