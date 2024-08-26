@@ -119,10 +119,9 @@ function loadMalbolgeFile(name) {
  */
 function takeNextStep() {
     if ( gen.isDone() ) {
-	newProg(
-	    gen.str().substr(0, 26),
-	    gen.code().match(/.{1,76}/g).join("\n")
-	);
+	const title = gen.str().substr(0, 26);
+	const foldCode = gen.code().match(/.{1,76}/g).join("\n");
+	newProg(title, foldCode);
 	$("#gen").remove();
 	return;
     }
@@ -133,26 +132,26 @@ function takeNextStep() {
     
     if ( ! $("#gen").length ) {
 	// Append <div id="gen">...</div> to body when not there.
-	$("body").append([
-	    '<div id="gen" style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 1000; background: rgba(100,100,100,0.5)">',
-		// WHAT???
-		'<div style="position: absolute; width: 800px; height: 320px; top: 0; bottom: 0; left: 0; right: 0; margin: auto; background: rgba(255,255,255,0.8); border: solid 1px #ccc; text-align: center">',
-		    //
-		    // Describes state.
-		    '<div id="genState" style="unicode-bidi: embed; font-family: monospace; white-space: pre; font-size: 16px; line-height: 22px; height: 180px; margin: 40px 60px; overflow-y: hidden; overflow-x: auto; text-align: center; font-weight: bold">...</div>',
-		    //
-		    // How many percents are done?
-		    '<div id="genPercent" style="float: left; font-size 24px; line-height: 36px; font-weight: bold; color: #aaa; margin: 0 0 0 50px"></div>',
-		    //
-		    // Cancel button.
-		    '<button id="genCancel" class="btn btn-primary pull-right" style="margin: 0 40px">',
-			'<span class="glyphicon glyphicon-cancel"></span>',
-			'<span lang="pl">Anulujm</span>',
-			'<span lang="en">Cancel</span>',
-		    "</button>",
-		"</div>",
-	    "</div>"
-	].join(""));
+	$("body").append(`
+	    <div id="gen" style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; z-index: 1000; background: rgba(100,100,100,0.5)">
+		<!-- WHAT? -->
+		<div style="position: absolute; width: 800px; height: 320px; top: 0; bottom: 0; left: 0; right: 0; margin: auto; background: rgba(255,255,255,0.8); border: solid 1px #ccc; text-align: center">
+
+		    <!-- describe states -->
+		    <div id="genState" style="unicode-bidi: embed; font-family: monospace; white-space: pre; font-size: 16px; line-height: 22px; height: 180px; margin: 40px 60px; overflow-y: hidden; overflow-x: auto; text-align: center; font-weight: bold">...</div>
+
+		    <!-- progresses in percent -->
+		    <div id="genPercent" style="float: left; font-size 24px; line-height: 36px; font-weight: bold; color: #aaa; margin: 0 0 0 50px"></div>
+
+		    <!-- cancel button -->
+		    <button id="genCancel" class="btn btn-primary pull-right" style="margin: 0 40px">
+			<span class="glyphicon glyphicon-cancel"></span>
+			<span lang="pl">Anulujm</span>
+			<span lang="en">Cancel</span>
+		    </button>
+		</div>
+	    </div>
+	`);
 
 	$("#genCancel").click(function () {
 	    gen.cancel();
@@ -191,90 +190,100 @@ function newProg(t, e) {
      * @const n {integer} process id.
      * @const a {string} HTML to be inserted. Dropdown menu.
      */
-    var n = newProc(),
-	a = [
-	    '<ul class="dropdown-menu" role="menu">',
-		'<li><a href="#" class="progRun" proc="' + n + '" title="Ctrl + R">',
-		    '<span class="glyphicon glyphicon-play"></span>',
-		    '<span lang="pl">Uruchom</span>',
-		    '<span lang="en">Run program</span>',
-		"</a></li>",
+    const n = newProc();
+    const a = `
+	    <ul class="dropdown-menu" role="menu">
+		<li><a href="#" class="progRun" proc="${n}" title="Ctrl + R">
+		    <span class="glyphicon glyphicon-play"></span>
+		    <span lang="pl">Uruchom</span>
+		    <span lang="en">Run program</span>
+		</a></li>
 
-		'<li><a href="#" class="progRename">',
-		    '<span class="glyphicon glyphicon-pencil"></span>',
-		    '<span lang="pl">Zmień nazwę</span>',
-		    '<span lang="en">Change name</span>',
-		"</a></li>",
+		<li><a href="#" class="progRename">
+		    <span class="glyphicon glyphicon-pencil"></span>
+		    <span lang="pl">Zmień nazwę</span>
+		    <span lang="en">Change name</span>
+		</a></li>
 
-		'<li><a href="#" class="progEcho" title="Ctrl + I">',
-		    '<span class="glyphicon glyphicon-edit"></span>',
-		    '<span lang="pl">Tekst do kodu</span>',
-		    '<span lang="en">Text to code</span>',
-		"</a></li>",
+		<li><a href="#" class="progEcho" title="Ctrl + I">
+		    <span class="glyphicon glyphicon-edit"></span>
+		    <span lang="pl">Tekst do kodu</span>
+		    <span lang="en">Text to code</span>
+		</a></li>
 
-		'<li><a href="#" class="progSave" title="Ctrl + S">',
-		    '<span class="glyphicon glyphicon-save"></span>',
-		    '<span lang="pl">Zapisz</span>',
-		    '<span lang="en">Save</span>',
-		"</a></li>",
+		<li><a href="#" class="progSave" title="Ctrl + S">
+		    <span class="glyphicon glyphicon-save"></span>
+		    <span lang="pl">Zapisz</span>
+		    <span lang="en">Save</span>
+		</a></li>
 
-		'<li><a href="#" class="progClose">',
-		    '<span class="glyphicon glyphicon-remove"></span>',
-		    '<span lang="pl">Zamknij</span>',
-		    '<span lang="en">Close</span>',
-		"</a></li>",
-	    "</ul>"
-	].join("\n");
+		<li><a href="#" class="progClose">
+		    <span class="glyphicon glyphicon-remove"></span>
+		    <span lang="pl">Zamknij</span>
+		    <span lang="en">Close</span>
+		</a></li>
+	    </ul>
+	`;
 
-    $("#biblioteka").before([
-	'<div role="tabpanel" class="tab-pane" id="prog' + n + '" rel="' + n + '">',
-	    '<div class="quickClose"><span class="glyphicon glyphicon-remove"></span></div>',
-	    '<label for="code' + n + '" lang="pl">Kod programu:</label>',
-	    '<label for="code' + n + '" lang="en">Program code:</label>',
-	    '<div class="textbox">',
-		'<div class="lines">1\n2\n3\n4\n9999</div>',
-		'<div class="textareabox">',
-		    '<textarea class="code form-control" rows="10" id="code' + n + '"></textarea>',
-		"</div>",
-	    "</div>",
+    $("#biblioteka").before(`
+	<div role="tabpanel" class="tab-pane" id="prog${n}" rel="${n}">
+	    <div class="quickClose"><span class="glyphicon glyphicon-remove"></span></div>
+	    <label for="code${n}" lang="pl">Kod programu:</label>
+	    <label for="code${n}" lang="en">Program code:</label>
+	    <div class="textbox">
+		<div class="lines">
+		    1
+		    2
+		    3
+		    4
+		    9999
+		</div>
+		<div class="textareabox">
+		    <textarea class="code form-control" rows="10" id="code${n}"></textarea>
+		</div>
+	    </div>
 
-	    '<div class="stats">stats</div>',
+	    <div class="stats">stats</div>
 
-	    '<div class="progBtns">',
-		'<button class="progRun btn btn-primary pull-right" proc="' + n + '">',
-		    '<span class="glyphicon glyphicon-play"></span>',
-		    '<span lang="pl">Uruchom program</span>',
-		    '<span lang="en">Run program</span>',
-		"</button>",
+	    <div class="progBtns">
+		<button class="progRun btn btn-primary pull-right" proc="${n}">
+		    <span class="glyphicon glyphicon-play"></span>
+		    <span lang="pl">Uruchom program</span>
+		    <span lang="en">Run program</span>
+		</button>
 
-		'<div class="dropdown pull-right">',
-		    '<button class="dropdown-toggle btn btn-normal" proc="' + n + '" data-toggle="dropdown">',
-			'<span class="glyphicon glyphicon-cog"></span>',
-			'<span lang="pl">Więcej</span>',
-			'<span lang="en">More</span>',
-		    "</button>",
-		    a,
-		"</div>",
-	    "</div>",
-	"</div>"
-    ].join("\n"));
+		<div class="dropdown pull-right">
+		    <button class="dropdown-toggle btn btn-normal" proc="${n}" data-toggle="dropdown">
+			<span class="glyphicon glyphicon-cog"></span>
+			<span lang="pl">Więcej</span>
+			<span lang="en">More</span>
+		    </button>
+		    ${a}
+		</div>
+	    </div>
+	</div>
+    `);
 
     // @param t is here
     // @const a is here
-    $('[aria-controls="biblioteka"]').parent().before([
-	'<li role="presentation" class="dropdown">',
-	    '<a class="dropdown-toggle" href="#prog' + n + '" proc="' + n + '" aria-controls="prog' + n + '" role="tab" data-toggle="tab">',
-		'<span class="glyphicon glyphicon-edit"></span> <span class="name">' + t + '</span> <span class="mydd glyphicon glyphicon-triangle-bottom"></span>',
-	    "</a>",
-	    a,
-	"</li>"
-    ].join("\n"));
+    $('[aria-controls="biblioteka"]').parent().before(`
+	<li role="presentation" class="dropdown">
+	    <a class=dropdown-toggle" href="#prog${n}" proc="${n}" aria-controls="prog${n}" role="tab" data-toggle="tab>
+		<span class="glyphicon glyphicon-edit"></span>${
+		    " "
+		}<span class="name">${t}</span>${
+		    " "
+		}<span class="mydd glyphicon glyphicon-triangle-bottom"></span>
+	    </a>
+	    ${a}
+	</li>
+    `);
     // end of @param t scope
 
-    $('[proc="' + n + '"]').click();
+    $(`[proc="${n}"]`).click();
 
     // @param e is here
-    $("#code" + n).val(e).focus();
+    $(`#code{n}`).val(e).focus();
     // end of @param e scope
 
     $('a[proc="' + n + '"]').on("click", function () {
@@ -455,8 +464,10 @@ function newProg(t, e) {
 	    $("#term" + t).focus().unbind("keydown").keydown(function (e) {
 		PROC[t].input(e), PROC[t].run()
 	    });
+
 	    PROC[t].stdout = $("#term" + t)[0];
 	    PROC[t].code = $("#code" + t).val();
+
 	    var e = PROC[t].reset();
 	    if ("OK" != e.status) {
 		var n = "";
@@ -480,9 +491,14 @@ function newProg(t, e) {
 			n = "Source is too short."
 		    }
 		}
-		return alert(n), void $("#prog" + t + " .termClose").click()
+		alert(n);
+		$("#prog" + t + " .termClose").click();
+		return;
 	    }
-	    PROC[t].endmsg = t, PROC[t].onend = onend, PROC[t].run()
+
+	    PROC[t].endmsg = t;
+	    PROC[t].onend = onend;
+	    PROC[t].run()
 	})
     });
 
@@ -492,14 +508,28 @@ function newProg(t, e) {
 } // @function newProg
 
 function onend(t) {
-    $("#term" + t).blur().attr("readonly", "readonly"), $('.progPause[proc="' + t + '"]').addClass("disabled")
+    $("#term" + t).blur().attr("readonly", "readonly");
+    $('.progPause[proc="' + t + '"]').addClass("disabled");
 }
 
+/**
+ * @function sp1
+ * @param t {string}
+ * @param e {integer}
+ * @description
+ * Insert spaces to @param t so its length becomes to be @param e.
+ */
 function sp1(t, e) {
-    for (var n = "" + t; n.length < e;) n = " " + n;
-    return n
+    const spaces2insert = e - t.length;
+    if ( spaces2insert <= 0 ) {
+	return t;
+    }
+    return " ".repeat(spaces2insert) + t;
 }
 
+/**
+ * @function updateStats
+ */
 function updateStats() {
     var t, e, n = $(".active textarea").val();
     switch (LANG) {
@@ -509,25 +539,57 @@ function updateStats() {
     default:
 	t = "size: ", e = "lines: "
     }
-    $(".active .stats").html('<span lang="' + LANG + '">' + t + sp1(n.length, 4) + "     " + e + n.split("\n").length + "</span>")
+
+    const txt = `${ t + sp1(n.length, 4) }    ${ e + n.split("\n").length }`;
+    const spanElement = `<span lang="${LANG}">${txt}</span>`;
+    $(".active .stats").html(spanElement);
 }
 
-function raport(t, e) {
-    if (e || !PROC[t].pause && !PROC[t].end) {
-	for (var n = "", a = 0; maxT >= a; a++) a % 9 == 0 ? n += "\n" + turn(a) + "   " : a % 3 == 0 && (n += "  "), n += turn(PROC[t].mem[a]) + " ";
-	var i, s, o;
-	switch (LANG) {
-	case "pl":
-	    i = "rejestr a: ", s = "rejestr c: ", o = "rejestr d: ";
-	    break;
-	default:
-	    i = "register a: ", s = "register c: ", o = "register d: "
-	}
-	var r = i + turn(PROC[t].a) + "     " + s + turn(PROC[t].c) + "     " + o + turn(PROC[t].d) + "\n" + n;
-	$("#raport" + t).html(r)
+/**
+ * @function raport
+ * @param t Process id.
+ * @param e {boolean} True to force to report.
+ * @description
+ * Report three registers.
+ */
+function raport(t, force_to_show) {
+    const my_proc = t in PROC && PROC[t];
+
+    const is_my_proc_working = my_proc && ( ! my_proc.pause && ! my_proc.end );
+    if ( force_to_show || is_my_proc_working ) {
+	// NOTHING;
+    } else {
+	return;
     }
+
+    for (var n = "", a = 0; a <= maxT; a++) {
+	if ( a % 9 == 0 ) {
+	    n += "\n" + turn(a) + "   "
+	} else {
+	    a % 3 == 0 && (n += "  ");
+	}
+
+	n += turn(my_proc.mem[a]) + " ";
+    }
+
+    var i, s, o;
+    switch (LANG) {
+    case "pl":
+	i = "rejestr a: ", s = "rejestr c: ", o = "rejestr d: ";
+	break;
+    default:
+	i = "register a: ", s = "register c: ", o = "register d: "
+    }
+
+    var r = i + turn(my_proc.a) + "     " + s + turn(my_proc.c) + "     " + o + turn(my_proc.d) + "\n" + n;
+    $("#raport" + t).html(r)
 }
 
+/**
+ * @function mkList
+ * @param t {???}
+ * @returns {string} as HTML <div>s.
+ */
 function mkList(t) {
     var e = [],
 	n = 0;
@@ -539,8 +601,22 @@ function mkList(t) {
 	break;
     }
 
-    for (var a in t) {
-	e.push(['<div class="row bibloEl">', '<div class="lp col-xs-1">' + ++n + ".</div>", '<div class="nazwa col-xs-3">' + t[a].nazwa + "</div>", '<div class="opis col-xs-6">' + t[a].opis + "</div>", '<div class="loadBtn col-xs-2">', '<a href="/malbolge/' + t[a].plik + '.malbolge" class="btn btn-primary btn-xs" download="' + t[a].plik + '.malbolge" title="' + saveStr + '" target="_blank">', '<span class="glyphicon glyphicon-save"></span>', "</a>", '<button class="btn btn-primary btn-xs" rel="' + t[a].plik + '" title="' + loadStr + '">', '<span class="glyphicon glyphicon-play-circle"></span>', "</button>", "</div>", "</div>"].join("\n"));
+    for (let a in t) {
+	e.push(`
+	    <div class="row bibloEl">
+		<div class=lp col-xs-1">${ ++n }.</div>
+		<div class=nazwa col-xs-3">${ t[a].nazwa }</div>
+		<div class=opis col-xs-6">${ t[a].opis }</div>
+		<div class="loadBtn col-xs-2">
+		    <a href="/malbolge/${ t[a].plik }.malbolge" class="btn btn-primary btn-xs" download="${ t[a].plik }.malbolge" title="${ saveStr }" target="_blank">
+			<span class="glyphicon glyphicon-save"></span>
+		    </a>
+		    <button class="btn btn-primary btn-xs" rel="${ t[a].plik }" title="${ loadStr }">
+			<span class="glyphicon glyphicon-play-circle"></span>
+		    </button>
+		</div>
+	    </div>
+	`);
     }
     return e.join("\n")
 }
@@ -551,9 +627,9 @@ function mkList(t) {
 function MALBOLGE() {
 
     const MALBOLGE_STATES = {
-	"HALT": 0, 
+	"MALBOLGE_HALT": 0, 
 	xxx: 1,
-	"INPUT": 2,
+	"MALBOLGE_INPUT": 2,
 	XXX: 3
     };
 
@@ -580,7 +656,7 @@ function MALBOLGE() {
      * @description
      * 0: stop
      */
-    this.state = MALBOLGE_STATES.HALT;
+    this.state = MALBOLGE_STATES.MALBOLGE_HALT;
 
     this.stdout = null;
     this.end = !1;
@@ -599,11 +675,12 @@ function MALBOLGE() {
      * @returns {object}
      */
     this.reset = function () {
+	// reset properties.
 	this.mem = [];
 	this.a = 0;
 	this.c = 0;
 	this.d = 0;
-	this.state = MALBOLGE_STATES.HALT;
+	this.state = MALBOLGE_STATES.MALBOLGE_HALT;
 	this.pause = !1;
 	this.end = !1;
 	this.tc = 0;
@@ -678,7 +755,7 @@ function MALBOLGE() {
 
 	    result += crazy_table[row * 3 + col] * weight;
 
-	    // ~~(...) is Math.floor(...).
+	    // ~~(...) is Math.floor(...) for >=0 values.
 	    t = ~~(t / 3);
 	    e = ~~(e / 3);
 
@@ -707,41 +784,67 @@ function MALBOLGE() {
 	    switch ( current_command ) {
 	    case 4:
 		// JUMP
-		this.c = this.mem[this.d], this.encrypt(this.c), this.c++, this.d++;
+		this.c = this.mem[this.d];
+		this.encrypt(this.c);
+		this.c++;
+		this.d++;
 		break;
 	    case 5:
 		// OUTPUT
-		this.stdout.value += String.fromCharCode(this.a % 256), this.stdout.scrollTop = 1e7, this.encrypt(this.c), this.c++, this.d++;
+		this.stdout.value += String.fromCharCode(this.a % 256);
+		this.stdout.scrollTop = 1e7;
+		this.encrypt(this.c);
+		this.c++;
+		this.d++;
 		break;
 	    case 23:
 		// INPUT; @method input shall be used later
-		this.state = 2;
+		this.state = MALBOLGE_STATES.MALBOLGE_INPUT;
 		break;
 	    case 39:
 		// ROT_R
-		var e = this.mem[this.d];
-		e = e % 3 * 19683 + ~~(e / 3), this.mem[this.d] = e, this.a = e, this.encrypt(this.c), this.c++, this.d++;
+		let e = this.mem[this.d];
+		e = e % 3 * 19683 + ~~(e / 3);
+		this.mem[this.d] = e;
+		this.a = e;
+		this.encrypt(this.c);
+		this.c++;
+		this.d++;
 		break;
 	    case 40:
 		// LOAD
-		this.d = this.mem[this.d], this.encrypt(this.c), this.c++, this.d++;
+		this.d = this.mem[this.d];
+		this.encrypt(this.c);
+		this.c++;
+		this.d++;
 		break;
 	    case 62:
 		// CRAZY_OP
-		var e = this.crz(this.mem[this.d], this.a);
-		this.mem[this.d] = e, this.a = e, this.encrypt(this.c), this.c++, this.d++;
+		const op_result = this.crz(this.mem[this.d], this.a);
+		this.mem[this.d] = op_result;
+		this.a = op_result;
+		this.encrypt(this.c);
+		this.c++;
+		this.d++;
 		break;
 	    case 68:
 		// NOP
-		this.encrypt(this.c), this.c++, this.d++;
+		this.encrypt(this.c);
+		this.c++;
+		this.d++;
 		break;
 	    case 81:
 		// HALT
-		this.encrypt(this.c), this.state = 0, this.end = !0, this.onend && this.onend(this.endmsg);
+		this.encrypt(this.c);
+		this.state = 0;
+		this.end = !0;
+		this.onend && this.onend(this.endmsg);
 		break;
 	    default:
 		// XXX: The original source is missing when the current command was a control character.
-		this.encrypt(this.c), this.c++, this.d++
+		this.encrypt(this.c);
+		this.c++;
+		this.d++
 	    }
 	}
 
@@ -753,13 +856,23 @@ function MALBOLGE() {
      * @param t {HTMLElement}
      */
     this.input = function (t) {
-	t.ctrlKey || (t.preventDefault(), t.stopPropagation());
-	if ( 2 == this.state ) {
+	if ( ! t.ctrlKey ) {
+	    t.preventDefault();
+	    t.stopPropagation();
+	}
+
+	if ( MALBOLGE_STATES.MALBOLGE_INPUT == this.state ) {
 	    var e = t.which;
 	    9 == e || e > 15 && 20 > e || 91 == e || (13 == e && (e = 10), e = 255 & t.key.charCodeAt(0), 122 == e && t.ctrlKey && (e = 0), (8 == t.which || 13 == t.which || 27 == t.which || 35 == t.which || 36 == t.which || 45 == t.which || 46 == t.which) && (e = t.which), this.a = e, this.encrypt(this.c), this.c++, this.d++, this.state = 1)
 	}
     };
 
+    /**
+     * @method encrypt
+     * @param t {address} for @property mem.
+     * @description
+     * Increment the address. Then encrypt by 
+     */
     this.encrypt = function (t) {
 	t = (t + 1 + maxT) % (maxT + 1);
 	const xlat2 = [57, 109, 60, 46, 84, 86, 97, 99, 96, 117, 89, 42, 77, 75, 39, 88, 126, 120, 68, 108, 125, 82, 69, 111, 107, 78, 58, 35, 63, 71, 34, 105, 64, 53, 122, 93, 38, 103, 113, 116, 121, 102, 114, 36, 40, 119, 101, 52, 123, 87, 80, 41, 72, 45, 90, 110, 44, 91, 37, 92, 51, 100, 76, 43, 81, 59, 62, 85, 33, 112, 74, 83, 55, 50, 70, 104, 79, 65, 49, 67, 66, 54, 118, 94, 61, 73, 95, 48, 47, 56, 124, 106, 115, 98];
@@ -768,17 +881,27 @@ function MALBOLGE() {
     };
 
     this.stop = function () {
-	this.state = 0
+	this.state = MALBOLGE_STATES.MALBOLGE_HALT;
     }
-}
+} // @class Malbolge
 
 function turn(t) {
-    for (var e = [], n = 0; 10 > n; n++) e.unshift(t % 3), t = ~~(t / 3);
+    for (var e = [], n = 0; 10 > n; n++) {
+	e.unshift(t % 3);
+	t = Math.floor(t / 3);
+    }
     return e.join("")
 }
 
+/**
+ * @unused @function c
+ * @Description
+ * ?
+ */
 function c(t, e) {
-    for (t -= e; 33 > t;) t += 94;
+    for (t -= e; 33 > t;) {
+	t += 94;
+    }
     return String.fromCharCode(t)
 }
 
@@ -791,9 +914,14 @@ function mb(t) {
 
     /**
      * @description
+     * XXX: idk
      */
     function e() {
-	for (var t, e = !0, n = 0; e;) t = (p[n] || 0) + 1, e = t > 2, p[n++] = t % 3
+	for (var t, e = !0, n = 0; e;) {
+	    t = (p[n] || 0) + 1;
+	    e = t > 2;
+	    p[n++] = t % 3;
+	}
     }
 
     function n(t, e) {
@@ -814,7 +942,7 @@ function mb(t) {
 
     var s,
 
-	o, r, l, c, p, h, d, g,
+	r, l,  p, h, d, g,
 
 	/**
 	 * @var u {bool}
@@ -826,6 +954,7 @@ function mb(t) {
 	/**
 	 * @var  v {bool}
 	 * @description
+	 * XXX: idk
 	 */
 	v = !1,
 
@@ -835,6 +964,12 @@ function mb(t) {
 	 * Is the program done?
 	 */
 	m = !1,
+
+	/**
+	 * @var f {string}
+	 * @description
+	 * XXX: idk
+	 */
 	f = "";
 
     // @public @methods
@@ -844,40 +979,58 @@ function mb(t) {
      * @description
      */
     this.nextStep = function () {
-	if (u && !v) {
-	    if (v = !0, s >= f.length) return u = !1, v = !1, m = !0, r.length || r.push(n(68, r.length)), void r.push(n(81, r.length));
-	    if (o = f.charCodeAt(s), 32 > o || o > 127) return v = !1, void s++;
-	    for (var t = Math.pow(3, 9); t;) {
-		h = l, d = r.length;
-		for (var c = 0; c < p.length; c++) {
-		    switch (p[c]) {
-		    case 0:
-			break;
-		    case 1:
-			g = n(39, d), h = a(g);
-			break;
-		    case 2:
-			g = n(62, d), h = i(g, h)
-		    }
-		    d++
-		}
-		if (h % 256 == o) {
-		    for (var c = 0; c < p.length; c++) switch (p[c]) {
-		    case 0:
-			r.push(n(68, r.length));
-			break;
-		    case 1:
-			r.push(n(39, r.length));
-			break;
-		    case 2:
-			r.push(n(62, r.length))
-		    }
-		    return r.push(n(5, r.length)), l = h, s++, v = !1, p = [], void this.nextStep()
-		}
-		e(), t--
-	    }
-	    l = a(n(39, r.length)), r.push(n(39, r.length)), v = !1
+	if ( ! u || v ) {
+	    return;
 	}
+
+	v = !0;
+	if ( s >= f.length ) {
+	    u = !1;
+	    v = !1;
+	    m = !0;
+
+	    r.length || r.push(n(68, r.length));
+	    r.push(n(81, r.length));
+	    return;
+	}
+
+	const o = f.charCodeAt(s);
+	if ( 32 > o || o > 127 ) {
+	    v = !1;
+	    s++;
+	    return;
+	}
+
+	for (var t = Math.pow(3, 9); t;) {
+	    h = l, d = r.length;
+	    for (var c = 0; c < p.length; c++) {
+		switch (p[c]) {
+		case 0:
+		    break;
+		case 1:
+		    g = n(39, d), h = a(g);
+		    break;
+		case 2:
+		    g = n(62, d), h = i(g, h)
+		}
+		d++
+	    }
+	    if (h % 256 == o) {
+		for (var c = 0; c < p.length; c++) switch (p[c]) {
+		case 0:
+		    r.push(n(68, r.length));
+		    break;
+		case 1:
+		    r.push(n(39, r.length));
+		    break;
+		case 2:
+		    r.push(n(62, r.length))
+		}
+		return r.push(n(5, r.length)), l = h, s++, v = !1, p = [], void this.nextStep()
+	    }
+	    e(), t--
+	}
+	l = a(n(39, r.length)), r.push(n(39, r.length)), v = !1
     };
 
     this.translate = function (t) {
@@ -1076,7 +1229,7 @@ $(function () {
 	"run:" == t.substr(0, 4) && (e = !0, t = t.substr(4));
 	t = decodeURIComponent(t);
 
-	var n = /^([^\+\-\.\,\[\]<>]*)/g.exec(t);
+	var n = /^([^+\-.,[\]<>]*)/g.exec(t);
 	if (n = n[0], t = t.substr(n.length), n = $.trim(n), !n) {
 	    switch (LANG) {
 	    case "pl":
